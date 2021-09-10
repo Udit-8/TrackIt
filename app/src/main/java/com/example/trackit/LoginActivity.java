@@ -3,6 +3,7 @@ package com.example.trackit;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
@@ -55,6 +56,8 @@ public class LoginActivity extends AppCompatActivity {
                                 if(passwordInDatabase.equals(password))
                                 {
                                     Toast.makeText(LoginActivity.this,"Signed in Successfully",Toast.LENGTH_LONG).show();
+                                    Intent intent = new Intent(LoginActivity.this,UserProfileActivity.class);
+                                    startActivity(intent);
                                 }
                                 else
                                 {
