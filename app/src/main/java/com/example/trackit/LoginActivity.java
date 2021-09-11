@@ -25,53 +25,32 @@ import com.google.firebase.database.ValueEventListener;
 public class LoginActivity extends AppCompatActivity {
     EditText userNameText, passwordText;
     DatabaseReference ref;
-    Button loginButton;
-
+    Button driverButton,studentButton;
+    boolean isStudent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        userNameText = findViewById(R.id.inputUsername);
-        passwordText = findViewById(R.id.inputPassword);
-        loginButton = findViewById(R.id.btnLogin);
-        ref = FirebaseDatabase.getInstance().getReference();
-        loginButton.setOnClickListener(v -> {
-            String username = userNameText.getText().toString().trim();
-            String password = passwordText.getText().toString().trim();
-            if (TextUtils.isEmpty(username)) {
-                Toast.makeText(LoginActivity.this, "Please enter a username", Toast.LENGTH_LONG).show();
-            } else if (TextUtils.isEmpty(password)) {
-                Toast.makeText(LoginActivity.this, "Please enter a password", Toast.LENGTH_LONG).show();
-            } else {
-                Query checkUser = ref.child("studentInfo").orderByChild("admissionNumber").equalTo(username);
-                checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) {
-                            Toast.makeText(LoginActivity.this, "Wrong admission number", Toast.LENGTH_LONG).show();
-                        } else {
-                            boolean passwordFound = false;
-                            for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                                if (childSnapshot != null) {
-                                    Student student = childSnapshot.getValue(Student.class);
-                                    if (student.getPassword().equals(password)) {
-                                        passwordFound = true;
-                                        Intent intent = new Intent(LoginActivity.this, UserProfileActivity.class);
-                                        intent.putExtra("loginStudent", student);
-                                        startActivity(intent);
-                                    }
-                                }
-                            }
-                            if (!passwordFound)
-                                Toast.makeText(LoginActivity.this, "Wrong Password Entered", Toast.LENGTH_LONG).show();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).replace(R.id.loginFragment, StudentLoginFragment.class, null).commit();
+        }
+        driverButton = findViewById(R.id.DriverButton);
+        studentButton = findViewById(R.id.StudentButton);
+        isStudent = true;
+        studentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isStudent)
+                    getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).replace(R.id.loginFragment, StudentLoginFragment.class, null).commit();
+                isStudent = true;
+            }
+        });
+        driverButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isStudent)
+                    getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).replace(R.id.loginFragment, DriverLoginFragment.class, null).commit();
+                isStudent = false;
             }
         });
     }
