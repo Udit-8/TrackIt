@@ -94,7 +94,7 @@ public class DriverLoginFragment extends Fragment {
             } else if (TextUtils.isEmpty(password)) {
                 Toast.makeText(getContext(), "Please enter a password", Toast.LENGTH_LONG).show();
             } else {
-                Query checkUser = ref.child("busInfo").orderByChild("busNumber").equalTo(username);
+                Query checkUser = ref.child("driverInfo").orderByChild("driverBusNumber").equalTo(username);
                 checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -104,11 +104,11 @@ public class DriverLoginFragment extends Fragment {
                             boolean passwordFound = false;
                             for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                                 if (childSnapshot != null) {
-                                    Student student = childSnapshot.getValue(Student.class);
-                                    if (student.getPassword().equals(password)) {
+                                    Driver driver = childSnapshot.getValue(Driver.class);
+                                    if (driver.getDriverPassword().equals(password)) {
                                         passwordFound = true;
-                                        Intent intent = new Intent(getContext(), UserProfileActivity.class);
-                                        intent.putExtra("loginStudent", student);
+                                        Intent intent = new Intent(getContext(), DriverProfileActivity.class);
+                                        intent.putExtra("loginDriver", driver);
                                         startActivity(intent);
                                     }
                                 }
