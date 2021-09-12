@@ -15,6 +15,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +23,9 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,36 +42,15 @@ public class DriverProfileActivity extends AppCompatActivity {
     Driver loginDriver;
     Location curLocation;
     DatabaseReference ref;
-    private Location getLastKnownLocation() {
-        locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
-        List<String> providers = locationManager.getProviders(true);
-        Location l = null;
-        Location bestLocation = null;
-        for (String provider : providers) {
-            if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
-
-                l = locationManager.getLastKnownLocation(provider);
-            }
-
-            if (l == null) {
-                continue;
-            }
-            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                // Found best last known location: %s", l);
-                bestLocation = l;
-            }
-        }
-        return bestLocation;
-    }
+    MaterialCardView driverChangePasswordCardView;
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
         }
     }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +64,7 @@ public class DriverProfileActivity extends AppCompatActivity {
         headerDriverFullNameTextView = findViewById(R.id.headerDriverNameText);
         setDriverFields(loginDriver);
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        driverChangePasswordCardView = findViewById(R.id.driverChangePasswordCard);
        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
          ref = FirebaseDatabase.getInstance().getReference().child("Active Buses").child(loginDriver.getDriverBusNumber());
 
@@ -93,11 +76,16 @@ public class DriverProfileActivity extends AppCompatActivity {
                     setLocation(location);
 
             }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
         };
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
         } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
         }
 
         fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
@@ -111,7 +99,15 @@ public class DriverProfileActivity extends AppCompatActivity {
                 }
             }
         });
-
+        driverChangePasswordCardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent newIntent = new Intent(DriverProfileActivity.this,ChangePasswordActivity.class);
+                newIntent.putExtra("isStudent",false);
+                newIntent.putExtra("loginDriver",loginDriver);
+                startActivity(newIntent);
+            }
+        });
 
 
 
@@ -127,7 +123,7 @@ public class DriverProfileActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
     }
 
     @Override

@@ -40,6 +40,7 @@
         android:padding="20dp"
         android:layout_marginTop="-100dp">
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/busLocationCard"
             android:layout_width="0dp"
             android:layout_height="110dp"
             android:layout_weight="1"

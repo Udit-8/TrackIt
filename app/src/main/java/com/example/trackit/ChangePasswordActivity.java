@@ -26,18 +26,27 @@ public class ChangePasswordActivity extends AppCompatActivity {
     Button changePasswordButton;
     TextView backTextView;
     DatabaseReference ref;
+    Student student;
+    Driver driver;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_password);
         Intent intent = getIntent();
-        Student student = (Student) intent.getSerializableExtra("loginStudent");
+        boolean isStudent = intent.getBooleanExtra("isStudent",true);
+        if(isStudent)
+            student = (Student) intent.getSerializableExtra("loginStudent");
+        else
+            driver = (Driver) intent.getSerializableExtra("loginDriver");
         currentPasswordText = findViewById(R.id.currentPasswordText);
         newPasswordText = findViewById(R.id.newPasswordText);
         confirmPasswordText = findViewById(R.id.confirmPasswordText);
         changePasswordButton = findViewById(R.id.changePassword);
         backTextView = findViewById(R.id.backText);
+        if(isStudent)
         ref = FirebaseDatabase.getInstance().getReference().child("studentInfo");
+        else
+            ref = FirebaseDatabase.getInstance().getReference().child("driverInfo");
         changePasswordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,8 +57,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 if(TextUtils.isEmpty(currentPassword)||TextUtils.isEmpty(newPassword)||TextUtils.isEmpty(confirmPassword))
                     Toast.makeText(ChangePasswordActivity.this,"Do not leave any fields empty",Toast.LENGTH_LONG).show();
                 else{
-                    Query checkUser = ref.orderByChild("admissionNumber").equalTo(student.getAdmissionNumber());
-
+                    Query checkUser;
+                    if(isStudent)
+                    checkUser = ref.orderByChild("admissionNumber").equalTo(student.getAdmissionNumber());
+                    else
+                        checkUser =  ref.orderByChild("driverBusNumber").equalTo(driver.getDriverBusNumber());
                     final String[] key = new String[1];
                     checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -62,11 +74,21 @@ public class ChangePasswordActivity extends AppCompatActivity {
                                     if(childSnapShot != null)
                                     {
                                          key[0] = childSnapShot.getKey();
-                                        Student foundStudent = childSnapShot.getValue(Student.class);
-                                        if(foundStudent.getPassword().equals(currentPassword))
-                                        {
-                                            passwordFound = true;
-                                        }
+                                         if(isStudent)
+                                         {
+                                             Student foundStudent = childSnapShot.getValue(Student.class);
+                                             if(foundStudent.getPassword().equals(currentPassword))
+                                             {
+                                                 passwordFound = true;
+                                             }
+                                         }
+                                         else
+                                         {
+                                             Driver foundDriver = childSnapShot.getValue(Driver.class);
+                                             if(foundDriver.getDriverPassword().equals(currentPassword))
+                                                 passwordFound = true;
+                                         }
+
                                     }
                                 }
                                 if(!passwordFound)
@@ -85,9 +107,17 @@ public class ChangePasswordActivity extends AppCompatActivity {
                                                 if(task.isSuccessful())
                                                 {
                                                     Toast.makeText(ChangePasswordActivity.this,"The password was updated",Toast.LENGTH_LONG).show();
-                                                    Intent newIntent = new Intent(ChangePasswordActivity.this,UserProfileActivity.class);
-                                                    newIntent.putExtra("loginStudent",student);
-                                                    startActivity(newIntent);
+                                                    if(isStudent)
+                                                    {
+                                                        Intent newIntent = new Intent(ChangePasswordActivity.this,UserProfileActivity.class);
+                                                        newIntent.putExtra("loginStudent",student);
+                                                        startActivity(newIntent);
+                                                    }
+                                                    else{
+                                                        Intent newIntent = new Intent(ChangePasswordActivity.this,DriverProfileActivity.class);
+                                                        newIntent.putExtra("loginDriver",driver);
+                                                        startActivity(newIntent);
+                                                    }
                                                 }
                                                 else{
                                                     Toast.makeText(ChangePasswordActivity.this,"Some Error occured.Please try Later",Toast.LENGTH_LONG).show();

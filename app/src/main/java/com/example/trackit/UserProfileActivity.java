@@ -1,19 +1,26 @@
 package com.example.trackit;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class UserProfileActivity extends AppCompatActivity {
     TextInputLayout fullNameLayout,admissionNoLayout,busNoLayout,contactNoLayout;
     TextView headerNameTextView;
-    MaterialCardView changePasswordCardView;
+    MaterialCardView changePasswordCardView,busLocationCardView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,14 +33,40 @@ public class UserProfileActivity extends AppCompatActivity {
         contactNoLayout = findViewById(R.id.contactNoLayout);
         headerNameTextView = findViewById(R.id.headerNameText);
         changePasswordCardView = (MaterialCardView) findViewById(R.id.changePasswordCard);
+        busLocationCardView = (MaterialCardView) findViewById(R.id.busLocationCard);
         setTextFields(loginStudent);
-        changePasswordCardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent newIntent = new Intent(UserProfileActivity.this,ChangePasswordActivity.class);
-                newIntent.putExtra("loginStudent",loginStudent);
-                startActivity(newIntent);
+        busLocationCardView.setOnClickListener(v -> {
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Active Buses");
+            if(ref != null)
+            {
+                ref.child(loginStudent.getBusNumber()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataSnapshot> task) {
+                        if(task.isSuccessful())
+                        {
+                            if(task.getResult().getValue() != null){
+                                Intent newIntent = new Intent(UserProfileActivity.this,StudentMapsActivity.class);
+                                newIntent.putExtra("busNumber",loginStudent.getBusNumber());
+                                startActivity(newIntent);
+                            }
+                            else{
+                                Toast.makeText(UserProfileActivity.this,"Your Driver is not currently using the app",Toast.LENGTH_LONG).show();
+                            }
+                        }
+                        else
+                            Toast.makeText(UserProfileActivity.this,"Your Driver is not currently using the app",Toast.LENGTH_LONG).show();
+                    }
+                });
             }
+            else{
+                Toast.makeText(UserProfileActivity.this,"Your Driver is not currently using the app",Toast.LENGTH_LONG).show();
+            }
+        });
+        changePasswordCardView.setOnClickListener(v -> {
+            Intent newIntent = new Intent(UserProfileActivity.this,ChangePasswordActivity.class);
+            newIntent.putExtra("loginStudent",loginStudent);
+            newIntent.putExtra("isStudent",true);
+            startActivity(newIntent);
         });
     }
 
