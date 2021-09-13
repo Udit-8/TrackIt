@@ -12,91 +12,74 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DriverProfileActivity extends AppCompatActivity {
     TextInputLayout driverNameLayout, busNumberLayout, driverContactLayout;
     TextView headerDriverFullNameTextView;
-    LocationManager locationManager;
-    LocationListener locationListener;
-    FusedLocationProviderClient fusedLocationProviderClient;
     Driver loginDriver;
-    Location curLocation;
-    DatabaseReference ref;
     MaterialCardView driverChangePasswordCardView;
+    Button startTrackingButton;
+    static boolean isTracking = false;
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
-        }
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        loginDriver = (Driver) intent.getSerializableExtra("loginDriver");
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_profile);
         Log.i("OnCreate","Activity Created");
-        Intent intent = getIntent();
-        loginDriver = (Driver) intent.getSerializableExtra("loginDriver");
+        onNewIntent(getIntent());
         driverNameLayout = findViewById(R.id.driverFullNameLayout);
         busNumberLayout = findViewById(R.id.busNumberLayout);
         driverContactLayout = findViewById(R.id.driverContactNoLayout);
         headerDriverFullNameTextView = findViewById(R.id.headerDriverNameText);
         setDriverFields(loginDriver);
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         driverChangePasswordCardView = findViewById(R.id.driverChangePasswordCard);
-       fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-         ref = FirebaseDatabase.getInstance().getReference().child("Active Buses").child(loginDriver.getDriverBusNumber());
+        startTrackingButton = findViewById(R.id.startTrackingButton);
 
-
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(@NonNull Location location) {
-                curLocation = location;
-                    setLocation(location);
-
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-        };
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        } else {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
         }
 
-        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
+        if(isTracking)
+            startTrackingButton.setText("Stop Tracking");
+        else
+            startTrackingButton.setText("Start Tracking");
+        startTrackingButton.setOnClickListener(v->{
+            if(!isTracking)
+            {
+                Log.i("isTracking","is Tracking called");
+                startTrackingButton.setText("Stop Tracking");
+                isTracking = true;
+                Intent newIntent = new Intent(DriverProfileActivity.this,ForegroundService.class);
+                newIntent.putExtra("loginDriver",loginDriver);
+                startService(newIntent);
+            }
+            else
+            {
+                startTrackingButton.setText("Start Tracking");
+                isTracking = false;
+                Intent serviceIntent = new Intent(this, ForegroundService.class);
+                stopService(serviceIntent);
 
-                        setLocation(location);
-
-
-                }
             }
         });
         driverChangePasswordCardView.setOnClickListener(new View.OnClickListener() {
@@ -108,54 +91,8 @@ public class DriverProfileActivity extends AppCompatActivity {
                 startActivity(newIntent);
             }
         });
-
-
-
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i("OnStart","Activity Started");
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.i("OnResume","Activity Resumed");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.i("OnPause","Activity Paused");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.i("OnStop","Activity Stopped");
-        ref.removeValue();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        Log.i("OnDestroy","Activity Destroyed");
-    }
-
-    private void setLocation(Location location) {
-        ref.child("Latitude").setValue(String.valueOf(location.getLatitude()));
-        ref.child("Longitude").setValue(String.valueOf(location.getLongitude()));
-    }
 
     private void setDriverFields(Driver driver) {
         driverNameLayout.getEditText().setText(driver.getDriverName());

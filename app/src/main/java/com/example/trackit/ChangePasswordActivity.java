@@ -101,7 +101,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
                                         Toast.makeText(ChangePasswordActivity.this,"The passwords do not match.Please enter the same password",Toast.LENGTH_LONG).show();
                                     }
                                     else{
-                                        ref.child(key[0]).child("password").setValue(newPassword).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        String child = isStudent ? "password" : "driverPassword";
+                                        ref.child(key[0]).child(child).setValue(newPassword).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if(task.isSuccessful())
@@ -141,9 +142,18 @@ public class ChangePasswordActivity extends AppCompatActivity {
         backTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent newIntent = new Intent(ChangePasswordActivity.this,UserProfileActivity.class);
-                newIntent.putExtra("loginStudent",student);
-                startActivity(newIntent);
+                if(isStudent)
+                {
+                    Intent newIntent = new Intent(ChangePasswordActivity.this,UserProfileActivity.class);
+                    newIntent.putExtra("loginStudent",student);
+                    startActivity(newIntent);
+                }
+                else{
+                    Intent newIntent = new Intent(ChangePasswordActivity.this,DriverProfileActivity.class);
+                    newIntent.putExtra("loginDriver",driver);
+                    startActivity(newIntent);
+                }
+
             }
         });
     }

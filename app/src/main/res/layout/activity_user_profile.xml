@@ -91,8 +91,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:textAlignment="center"
                     android:text="Change Password"
+                    android:textAlignment="center"
+                    android:gravity="center"
                     android:textColor="#FFFFFF"
                     android:textSize="20sp" />
             </RelativeLayout>
@@ -116,7 +117,8 @@
             android:background="#FFFFFF"
             android:drawableLeft="@drawable/ic_person_small"
             android:drawablePadding="10dp"
-            android:text="Udit Rai"/>
+            android:text="Udit Rai"
+            android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -130,7 +132,8 @@
                 android:background="#FFFFFF"
                 android:drawableLeft="@drawable/ic_home"
                 android:drawablePadding="10dp"
-                android:text="Lanka,Varanasi"/>
+                android:text="Lanka,Varanasi"
+                android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -144,7 +147,8 @@
                 android:background="#FFFFFF"
                 android:drawableLeft="@drawable/ic_phone"
                 android:drawablePadding="10dp"
-                android:text="+916388168917" />
+                android:text="+916388168917"
+                android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -158,7 +162,8 @@
                 android:background="#FFFFFF"
                 android:drawableLeft="@drawable/ic_person_small"
                 android:drawablePadding="10dp"
-                android:text="Prabhat Rai"/>
+                android:text="Prabhat Rai"
+                android:editable="false"/>
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
     </LinearLayout>
