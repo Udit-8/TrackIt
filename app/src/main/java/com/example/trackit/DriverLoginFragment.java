@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -40,7 +41,7 @@ public class DriverLoginFragment extends Fragment {
     EditText userNameText, passwordText;
     DatabaseReference ref;
     Button loginButton;
-
+    ProgressBar driverProgressBar;
     public DriverLoginFragment() {
         // Required empty public constructor
     }
@@ -85,14 +86,19 @@ public class DriverLoginFragment extends Fragment {
         userNameText = view.findViewById(R.id.inputUsername);
         passwordText = view.findViewById(R.id.inputPassword);
         loginButton = view.findViewById(R.id.btnLogin);
+        driverProgressBar = (ProgressBar) view.findViewById(R.id.driverProgressBar);
         ref = FirebaseDatabase.getInstance().getReference();
+        driverProgressBar.setVisibility(View.INVISIBLE);
         loginButton.setOnClickListener(v -> {
             String username = userNameText.getText().toString().trim();
             String password = passwordText.getText().toString().trim();
+            driverProgressBar.setVisibility(View.VISIBLE);
             if (TextUtils.isEmpty(username)) {
                 Toast.makeText(getContext(), "Please enter a username", Toast.LENGTH_LONG).show();
+                driverProgressBar.setVisibility(View.INVISIBLE);
             } else if (TextUtils.isEmpty(password)) {
                 Toast.makeText(getContext(), "Please enter a password", Toast.LENGTH_LONG).show();
+                driverProgressBar.setVisibility(View.INVISIBLE);
             } else {
                 final boolean[] isDriverLoggedIn = {false};
                 ref.child("loginDrivers").child(username).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -110,6 +116,7 @@ public class DriverLoginFragment extends Fragment {
                 if(isDriverLoggedIn[0])
                 {
                     Toast.makeText(getContext(),"Driver is currently logged in from other device.",Toast.LENGTH_LONG).show();
+                    driverProgressBar.setVisibility(View.INVISIBLE);
                 }
                 else{
                     Query checkUser = ref.child("driverInfo").orderByChild("driverBusNumber").equalTo(username);
@@ -118,6 +125,7 @@ public class DriverLoginFragment extends Fragment {
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             if (!snapshot.exists()) {
                                 Toast.makeText(getContext(), "Wrong bus number", Toast.LENGTH_LONG).show();
+                                driverProgressBar.setVisibility(View.INVISIBLE);
                             } else {
                                 boolean passwordFound = false;
                                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
@@ -128,12 +136,15 @@ public class DriverLoginFragment extends Fragment {
                                             ref.child("loginDrivers").child(username).setValue(true);
                                             Intent intent = new Intent(getContext(), DriverProfileActivity.class);
                                             intent.putExtra("loginDriver", driver);
+                                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                             startActivity(intent);
                                         }
                                     }
                                 }
-                                if (!passwordFound)
+                                if (!passwordFound) {
                                     Toast.makeText(getContext(), "Wrong Password Entered", Toast.LENGTH_LONG).show();
+                                    driverProgressBar.setVisibility(View.INVISIBLE);
+                                }
                             }
                         }
 

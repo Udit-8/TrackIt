@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -32,6 +33,7 @@ public class StudentLoginFragment extends Fragment {
     EditText userNameText, passwordText;
     DatabaseReference ref;
     Button loginButton;
+    ProgressBar studentProgressBar;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -85,14 +87,19 @@ public class StudentLoginFragment extends Fragment {
         userNameText = view.findViewById(R.id.inputUsername);
         passwordText = view.findViewById(R.id.inputPassword);
         loginButton = view.findViewById(R.id.btnLogin);
+        studentProgressBar = view.findViewById(R.id.studentProgressBar);
         ref = FirebaseDatabase.getInstance().getReference();
+        studentProgressBar.setVisibility(View.INVISIBLE);
         loginButton.setOnClickListener(v -> {
             String username = userNameText.getText().toString().trim();
             String password = passwordText.getText().toString().trim();
+            studentProgressBar.setVisibility(View.VISIBLE);
             if (TextUtils.isEmpty(username)) {
                 Toast.makeText(getContext(), "Please enter a username", Toast.LENGTH_LONG).show();
+                studentProgressBar.setVisibility(View.INVISIBLE);
             } else if (TextUtils.isEmpty(password)) {
                 Toast.makeText(getContext(), "Please enter a password", Toast.LENGTH_LONG).show();
+                studentProgressBar.setVisibility(View.INVISIBLE);
             } else {
                 Query checkUser = ref.child("studentInfo").orderByChild("admissionNumber").equalTo(username);
                 checkUser.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -100,12 +107,14 @@ public class StudentLoginFragment extends Fragment {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (!snapshot.exists()) {
                             Toast.makeText(getContext(), "Wrong admission number", Toast.LENGTH_LONG).show();
+                            studentProgressBar.setVisibility(View.INVISIBLE);
                         } else {
                             boolean passwordFound = false;
                             for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                                 if (childSnapshot != null) {
                                     Student student = childSnapshot.getValue(Student.class);
                                     if (student.getPassword().equals(password)) {
+                                        studentProgressBar.setVisibility(View.INVISIBLE);
                                         passwordFound = true;
                                         Intent intent = new Intent(getContext(), UserProfileActivity.class);
                                         intent.putExtra("loginStudent", student);
@@ -113,8 +122,10 @@ public class StudentLoginFragment extends Fragment {
                                     }
                                 }
                             }
-                            if (!passwordFound)
+                            if (!passwordFound) {
                                 Toast.makeText(getContext(), "Wrong Password Entered", Toast.LENGTH_LONG).show();
+                                studentProgressBar.setVisibility(View.INVISIBLE);
+                            }
                         }
                     }
 
