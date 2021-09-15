@@ -2,6 +2,7 @@ package com.example.trackit;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -14,6 +15,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -33,6 +35,7 @@ public class DriverProfileActivity extends AppCompatActivity {
     Driver loginDriver;
     MaterialCardView driverChangePasswordCardView;
     Button startTrackingButton;
+    Toolbar driverToolbar;
     static boolean isTracking = false;
 
     @Override
@@ -42,11 +45,17 @@ public class DriverProfileActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        logout();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_profile);
-        Log.i("OnCreate","Activity Created");
         onNewIntent(getIntent());
+        driverToolbar = findViewById(R.id.driverToolbar);
         driverNameLayout = findViewById(R.id.driverFullNameLayout);
         busNumberLayout = findViewById(R.id.busNumberLayout);
         driverContactLayout = findViewById(R.id.driverContactNoLayout);
@@ -82,6 +91,19 @@ public class DriverProfileActivity extends AppCompatActivity {
 
             }
         });
+        driverToolbar.inflateMenu(R.menu.menu);
+        driverToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int id = item.getItemId();
+                switch(id)
+                {
+                    case R.id.action_logout:
+                        logout();
+                }
+                return false;
+            }
+        });
         driverChangePasswordCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,6 +113,23 @@ public class DriverProfileActivity extends AppCompatActivity {
                 startActivity(newIntent);
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(!isTracking)
+            logout();
+    }
+
+    private void logout() {
+        isTracking = false;
+        Intent serviceIntent = new Intent(this, ForegroundService.class);
+        stopService(serviceIntent);
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("loginDrivers").child(loginDriver.getDriverBusNumber());
+        ref.removeValue();
+        Intent intent = new Intent(DriverProfileActivity.this,LoginActivity.class);
+        startActivity(intent);
     }
 
 

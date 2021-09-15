@@ -2,9 +2,11 @@ package com.example.trackit;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +23,14 @@ public class UserProfileActivity extends AppCompatActivity {
     TextInputLayout fullNameLayout,admissionNoLayout,busNoLayout,contactNoLayout;
     TextView headerNameTextView;
     MaterialCardView changePasswordCardView,busLocationCardView;
+    Toolbar studentToolbar;
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        logout();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +44,21 @@ public class UserProfileActivity extends AppCompatActivity {
         headerNameTextView = findViewById(R.id.headerNameText);
         changePasswordCardView = (MaterialCardView) findViewById(R.id.changePasswordCard);
         busLocationCardView = (MaterialCardView) findViewById(R.id.busLocationCard);
+        studentToolbar = findViewById(R.id.studentToolbar);
         setTextFields(loginStudent);
+        studentToolbar.inflateMenu(R.menu.menu);
+        studentToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int id = item.getItemId();
+                switch (id)
+                {
+                    case R.id.action_logout:
+                        logout();
+                }
+                return false;
+            }
+        });
         busLocationCardView.setOnClickListener(v -> {
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("Active Buses");
             if(ref != null)
@@ -68,6 +92,11 @@ public class UserProfileActivity extends AppCompatActivity {
             newIntent.putExtra("isStudent",true);
             startActivity(newIntent);
         });
+    }
+
+    private void logout() {
+        Intent newIntent = new Intent(UserProfileActivity.this,LoginActivity.class);
+        startActivity(newIntent);
     }
 
     private void setTextFields(Student student) {

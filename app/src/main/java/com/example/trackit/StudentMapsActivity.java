@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -37,6 +39,7 @@ public class StudentMapsActivity extends FragmentActivity implements OnMapReadyC
     FusedLocationProviderClient fusedLocationProviderClient;
     DatabaseReference ref;
     Marker marker;
+    ValueEventListener valueEventListener;
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -69,6 +72,7 @@ public class StudentMapsActivity extends FragmentActivity implements OnMapReadyC
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.i("onMapReady","On Map ready called");
         mMap = googleMap;
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         Intent intent = getIntent();
@@ -79,34 +83,42 @@ public class StudentMapsActivity extends FragmentActivity implements OnMapReadyC
         } else {
             getCurrentLocation();
         }
-        ref = FirebaseDatabase.getInstance().getReference().child("Active Buses");
+        ref = FirebaseDatabase.getInstance().getReference().child("Active Buses").child(busNumber);
+        valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists())
+                {
+                    Double driverLatitude = Double.valueOf(snapshot.child("Latitude").getValue(String.class));
+                    Double driverLongitude = Double.valueOf(snapshot.child("Longitude").getValue(String.class));
+                    LatLng driverLatLng = new LatLng(driverLatitude,driverLongitude);
+                    if(marker != null)
+                        marker.remove();
+                    else
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(driverLatLng,12));
+                    marker = mMap.addMarker(new MarkerOptions().position(driverLatLng).title("Driver's Location")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(StudentMapsActivity.this, "Your driver has stopped tracking their location", Toast.LENGTH_SHORT).show();
+            }
+        };
         if(ref != null)
         {
-            ref.child(busNumber).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists())
-                    {
-                        Double driverLatitude = Double.valueOf(snapshot.child("Latitude").getValue(String.class));
-                        Double driverLongitude = Double.valueOf(snapshot.child("Longitude").getValue(String.class));
-                        LatLng driverLatLng = new LatLng(driverLatitude,driverLongitude);
-                        if(marker != null)
-                            marker.remove();
-                        else
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(driverLatLng,12));
-                        marker = mMap.addMarker(new MarkerOptions().position(driverLatLng).title("Driver's Location")
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
-
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
+            ref.addValueEventListener(valueEventListener);
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ref.removeEventListener(valueEventListener);
+    }
+
     private void getCurrentLocation()
     {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {

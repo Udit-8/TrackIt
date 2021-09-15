@@ -17,6 +17,7 @@
         <entry key="app/src/main/res/layout/activity_user_profile.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_driver_login.xml" value="0.36041666666666666" />
         <entry key="app/src/main/res/layout/fragment_student_login.xml" value="0.36041666666666666" />
+        <entry key="app/src/main/res/menu/menu.xml" value="0.36041666666666666" />
       </map>
     </option>
   </component>
